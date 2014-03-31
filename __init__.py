@@ -7,7 +7,7 @@ __license__ = 'GPL v3'
 __copyright__ = '2014, YongSeok Choi <sseeookk@gmail.com> based on the Goodreads work by Grant Drake <grant.drake@gmail.com>'
 __docformat__ = 'restructuredtext en'
 
-import time, re
+import time, re, locale
 from urllib import quote
 from Queue import Queue, Empty
 from collections import OrderedDict
@@ -20,6 +20,8 @@ from calibre.ebooks.metadata.sources.base import Source
 from calibre.utils.icu import lower
 from calibre.utils.cleantext import clean_ascii_chars
 
+load_translations()
+
 class Aladin_co_kr(Source):
     '''
     This plugin is only for books in the Korean language.
@@ -29,16 +31,20 @@ class Aladin_co_kr(Source):
     name = 'Aladin.co.kr'
     description = _('Downloads metadata and covers from aladin.co.kr')
     author = 'YongSeok Choi'
-    version = (0, 1, 0)
+    version = (0, 2, 0)
     minimum_calibre_version = (0, 8, 0)
-
+    
+    
+    (_, encoding) = locale.getdefaultlocale()
+    if not encoding: encoding = "utf-8"
+    
     capabilities = frozenset(['identify', 'cover'])
     touched_fields = frozenset(['title', 'authors', 'identifier:aladin.co.kr',
         'identifier:isbn', 'rating', 'comments', 'publisher', 'pubdate',
         'tags', 'series', 'languages'])
-    #has_html_comments = True
+    has_html_comments = True
     supports_gzip_transfer_encoding = True
-
+    
     # 201403 aladin url patterns :
     # http://www.aladin.co.kr/shop/wproduct.aspx?ISBN=8965744024
     # http://www.aladin.co.kr/search/wsearchresult.aspx?SearchType=3&KeyISBN=9788965744023
@@ -48,7 +54,6 @@ class Aladin_co_kr(Source):
     # SortOrder 정렬순서(select="SortOrder") -  11 정확도순,  1 상품명순,  2 판매량순,  3 평점순,  4 리뷰순,  5 출간일순,  9 저가격순
 
     BASE_URL = 'http://www.aladin.co.kr'
-    MAX_EDITIONS = 5
 
     def config_widget(self):
         '''
@@ -78,19 +83,19 @@ class Aladin_co_kr(Source):
             
             # TODO: No tokent is returned for korean name.
             # 한글이름일 경우 token 이 반환 안된다.
-            # by CYS ,  20140315 
+            # by sseeookk ,  20140315 
             # author_tokens = self.get_author_tokens(authors, only_first_author=True)
-            authors_endode = None
-            if authors : authors_endode = list(a.encode('utf-8') for a in authors)
-            author_tokens = self.get_author_tokens(authors_endode, only_first_author=True)
+            authors_encode = None
+            if authors : authors_encode = list(a.encode('utf-8') for a in authors)
+            author_tokens = self.get_author_tokens(authors_encode, only_first_author=True)
             tokens += author_tokens
             
             #tokens = [quote(t.encode('utf-8') if isinstance(t, unicode) else t) for t in tokens] #
-            tokens = [(t.encode('utf-8') if isinstance(t, unicode) else t) for t in tokens] # by CYS
+            tokens = [(t.encode('utf-8') if isinstance(t, unicode) else t) for t in tokens] # by sseeookk
             q = '+'.join(tokens)
             
             # TODO: why? \ or %
-            # by CYS
+            # by sseeookk
             # change : \ --> % 
             q = "%r" % q
             q = re.sub("\\\\","%", q)
@@ -101,7 +106,7 @@ class Aladin_co_kr(Source):
             
         if not q:
             return None
-        # by CYS
+        # by sseeookk
         # if isinstance(q, unicode):
             # q = q.encode('utf-8')
         return Aladin_co_kr.BASE_URL + '' + q
@@ -145,7 +150,7 @@ class Aladin_co_kr(Source):
                     raw = response.read().strip()
                     # open('E:\\t11.html', 'wb').write(raw) # XXXX
                     
-                    # by CYS
+                    # by sseeookk
                     # euc-kr at aladin.co.kr
                     # raw = raw.decode('utf-8', errors='replace')
                     raw = raw.decode('euc-kr', errors='replace')
@@ -227,13 +232,14 @@ class Aladin_co_kr(Source):
             log.info('Looking at result:')
             title_nodes = result.xpath('.//div[contains(@class, "ss_book_list")]//a[@class="bo3" and contains(@href,"wproduct.aspx?ISBN=")]')
             
+            title = ''
             if title_nodes:
                 title = re.sub("\s{2,}"," ",title_nodes[0].text_content().strip())
             if not title:
                 log.info('Could not find title')
                 continue
             # Strip off any series information from the title
-            log.info('FOUND TITLE:',title)
+            log.info('FOUND TITLE:',title.encode(self.encoding,errors='replace'))
             if '(' in title:
                 #log.info('Stripping off series(')
                 title = title.rpartition('(')[0].strip()
@@ -262,12 +268,12 @@ class Aladin_co_kr(Source):
             return
 
         title_tokens = list(self.get_title_tokens(orig_title))
-        # by CYS, 20140315
+        # by sseeookk, 20140315
         # for korean author name
         # author_tokens = list(self.get_author_tokens(orig_authors))
-        orig_authors_endode = None
-        if orig_authors : orig_authors_endode = list(a.encode('utf-8') for a in orig_authors) # by CYS
-        author_tokens = list(self.get_author_tokens(orig_authors_endode))
+        orig_authors_encode = None
+        if orig_authors : orig_authors_encode = list(a.encode('utf-8') for a in orig_authors) # by sseeookk
+        author_tokens = list(self.get_author_tokens(orig_authors_encode))
             
         def ismatch(title, authors):
             authors = lower(' '.join(authors))
@@ -291,15 +297,16 @@ class Aladin_co_kr(Source):
         num = 1
         for result in results:
             log.info('Looking at result:')
-            title = result.xpath('.//div[contains(@class, "ss_book_list")]//a[contains(@href,"wproduct.aspx")]/..')
+            title_nodes = result.xpath('.//div[contains(@class, "ss_book_list")]//a[contains(@href,"wproduct.aspx")]/..')
             
-            if title:
-                title = re.sub("\s{2,}"," ",title[0].text_content().strip())
+            title = ''
+            if title_nodes:
+                title = re.sub("\s{2,}"," ",title_nodes[0].text_content().strip())
             if not title:
                 log.info('Could not find title')
                 continue
             # Strip off any series information from the title
-            log.info('FOUND TITLE:',title)
+            log.info('FOUND TITLE:',title.encode(self.encoding,errors='replace'))
             if '(' in title:
                 #log.info('Stripping off series(')
                 title = title.rpartition('(')[0].strip()
@@ -313,9 +320,9 @@ class Aladin_co_kr(Source):
                     authors.append(author.strip())
             
             #log.info('Looking at tokens:',author)
-            log.info('Considering search result: %s %s' % (title, authors))
+            log.info('Considering search result: ',title.encode(self.encoding,errors='replace'), "," , '|'.join(authors).encode(self.encoding,errors='replace')) # 
             if not ismatch(title, authors):
-                log.error('Rejecting as not close enough match: %s %s' % (title, authors))
+                log.error('Rejecting as not close enough match: ',title.encode(self.encoding,errors='replace'), "," , '|'.join(authors).encode(self.encoding,errors='replace'))
                 continue
 
             result_url = result.xpath('.//div[contains(@class, "ss_book_list")]//a/@href[contains(.,"wproduct.aspx?")]')

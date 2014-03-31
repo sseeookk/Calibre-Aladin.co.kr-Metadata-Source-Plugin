@@ -32,6 +32,7 @@ plugin_name = None
 # classes if you need any zip images to be displayed on the configuration dialog.
 plugin_icon_resources = {}
 
+load_translations()
 
 def set_plugin_icon_resources(name, resources):
     '''

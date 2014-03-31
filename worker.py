@@ -1,7 +1,6 @@
 ﻿#!/usr/bin/env python
 # vim:fileencoding=UTF-8:ts=4:sw=4:sta:et:sts=4:ai
-from __future__ import (unicode_literals, division, absolute_import,
-                        print_function)
+from __future__ import (unicode_literals, division, absolute_import, print_function)
 
 __license__   = 'GPL v3'
 __copyright__ = '2014, YongSeok Choi <sseeookk@gmail.com> based on the Goodreads work by Grant Drake <grant.drake@gmail.com>'
@@ -76,9 +75,7 @@ class Worker(Thread): # Get details
                 self.log.exception(msg)
             return
 
-        # open('c:\\aladin1.html', 'wb').write(raw)
         # raw = raw.decode('utf-8', errors='replace') #00
-        # open('c:\\aladin2.html', 'wb').write(raw)
 
         # if '<title>404 - ' in raw:
             # self.log.error('URL malformed: %r'%self.url)
@@ -98,7 +95,10 @@ class Worker(Thread): # Get details
             title_node = root.xpath('//title')
             if title_node:
                 page_title = title_node[0].text_content().strip()
-                if page_title is None or page_title.find('search results for') != -1:
+                
+                # search success : '[알라딘]나의 문화유산답사기 1 - 남도답사 일번지, 개정판'
+                # search fail : '[알라딘] "좋은 책을 고르는 방법, 알라딘"'
+                if page_title is None or page_title.find('좋은 책을 고르는 방법, 알라딘') > -1:
                     self.log.error('Failed to see search results in page title: %r'%self.url)
                     return
         except:
@@ -136,7 +136,7 @@ class Worker(Thread): # Get details
 
         if not title or not authors or not aladin_id:
             self.log.error('Could not find title/authors/aladin id for %r'%self.url)
-            self.log.error('Aladin: %r Title: %r Authors: %r'%(aladin_id, title,
+            self.log.error('aladin.co.kr: %r Title: %r Authors: %r'%(aladin_id, title,
                 authors))
             return
 
@@ -174,6 +174,7 @@ class Worker(Thread): # Get details
             tags = self.parse_tags(root)
             if tags:
                 mi.tags = tags
+                # mi['#mytags'] = "hello" # TODO: XXXX
         except:
             self.log.exception('Error parsing tags for url: %r'%self.url)
 
@@ -296,10 +297,8 @@ class Worker(Thread): # Get details
         # 출판사 제공 책소개 - 외국 도서,
         # http://www.aladin.co.kr/shop/product/getContents.aspx?ISBN=0385340583&name=PublisherDesc&type=0&date=15
         
-        default_append_toc = cfg.DEFAULT_STORE_VALUES[cfg.KEY_APPEND_TOC]
-        append_toc = cfg.plugin_prefs[cfg.STORE_NAME].get(cfg.KEY_APPEND_TOC, default_append_toc)
-        
         comments = ''
+        toc = ''
         
         try:
             self.browser.addheaders = [('Referer', self.url)]
@@ -317,19 +316,22 @@ class Worker(Thread): # Get details
                     msg = 'Failed to make Descrpitions query: %r' % urlDesc
                     self.log.exception(msg)
                 
-        
         if rawDesc:
             try:
                 rawDesc = rawDesc.decode('euc-kr', errors='replace')
                 # rawDesc = rawDesc.decode('utf-8', errors='replace')
                 rootDesc = fromstring(clean_ascii_chars(rawDesc))
-                # comments += rootDesc.text_content()
                 nodeDesc = rootDesc.xpath('//div[@class="p_textbox"]')
-                if nodeDesc : comments += nodeDesc[0].text_content()
+                if nodeDesc :
+                    self._removeTags(nodeDesc[0],["object","script","style"])
+                    comments = tostring(nodeDesc[0], method='html')
             except:
                 msg = 'Failed to parse aladin details page: %r' % urlDesc
                 self.log.exception(msg)
-            
+                
+            default_append_toc = cfg.DEFAULT_STORE_VALUES[cfg.KEY_APPEND_TOC]
+            append_toc = cfg.plugin_prefs[cfg.STORE_NAME].get(cfg.KEY_APPEND_TOC, default_append_toc)
+        
             if rootDesc and append_toc:
                 toc_node = rootDesc.xpath('//div[@id="div_TOC_All"]/p')
                 if not toc_node:
@@ -337,14 +339,22 @@ class Worker(Thread): # Get details
                 if toc_node:
                     toc = tostring(toc_node[0], method='html')
                     toc = sanitize_comments_html(toc)
-                    comments += '<h3>[목차]</h3><div id="toc">' + toc + "</div>"
         if not comments:
             # Look for description in a meta
             description_node = root.xpath('//meta[@name="Description"]/@content')
             if description_node:
                 # return description_node[0]
-                comments += description_node[0]
-            
+                comments = description_node[0]
+        if comments:
+            comments = '<div id="comments">' + comments + '</div>'
+        if toc:
+            comments += '<h3>[목차]</h3><div id="toc">' + toc + "</div>"
+        if comments:
+            comments_suffix = cfg.DEFAULT_STORE_VALUES[cfg.KEY_COMMENTS_SUFFIX]
+            comments_suffix = cfg.plugin_prefs[cfg.STORE_NAME].get(cfg.KEY_COMMENTS_SUFFIX, comments_suffix)
+            # comments += '<hr /><div><div style="float:right">[aladin.co.kr]</div></div>'
+            if comments_suffix:
+                comments += comments_suffix
         return comments
 
     def parse_cover(self, root):
@@ -359,9 +369,14 @@ class Worker(Thread): # Get details
             # aladin have no image.
             # http://image.aladin.co.kr/img/noimg_b.gif
             if "noimg" in img_url_small : return
-            img_url = re.sub("/cover/","/letslook/",img_url_small)
-            img_url = re.sub("_\d.jpg","_f.jpg",img_url)
-            img_url = re.sub("_\d.gif","_f.jpg",img_url)
+            small_cover = cfg.DEFAULT_STORE_VALUES[cfg.KEY_SMALL_COVER]
+            small_cover = cfg.plugin_prefs[cfg.STORE_NAME].get(cfg.KEY_SMALL_COVER, small_cover)
+            if small_cover:
+                img_url = img_url_small
+            else:
+                img_url = re.sub("/cover/","/letslook/",img_url_small)
+                img_url = re.sub("_\d.jpg","_f.jpg",img_url)
+                img_url = re.sub("_\d.gif","_f.jpg",img_url)
             try:
                 # Unfortunately Aladin sometimes have broken links so we need to do
                 # an additional request to see if the URL actually exists
@@ -372,8 +387,8 @@ class Worker(Thread): # Get details
                     self.log.warning('Broken image for url: %s'%img_url)
             except:
                 pass
-            return img_url_small
-
+    
+    
     def parse_isbn(self, root):
         isbn_node = root.xpath('//div[@class="p_goodstd03"]')
         if isbn_node:
@@ -392,13 +407,12 @@ class Worker(Thread): # Get details
 
             # Now look for the pubdate. There should always be one at start of the string
             pubdate_text_str = publisher_node[0].tail
-            pubdate_text = None
             if pubdate_text_str :
                 pubdate_text_match = re.search('(\d{4}-\d{1,2}-\d{1,2})', pubdate_text_str)
                 if pubdate_text_match is not None:
                     pubdate_text = pubdate_text_match.groups(0)[0]
-            if pubdate_text:
-                pub_date = self._convert_date_text_hyphen(pubdate_text)
+                    if pubdate_text:
+                        pub_date = self._convert_date_text_hyphen(pubdate_text)
         return (publisher, pub_date)
 
     def parse_tags(self, root):
@@ -415,14 +429,22 @@ class Worker(Thread): # Get details
             if genres_node:
                 #self.log.info("Found genres_node")
                 for genre in genres_node:
-                    calibre_tags.append("[" + genre.text_content().strip() + "]")
+                    genre = genre.text_content().strip() 
+                    # &nbsp; 를 공란(space)로 변환
+                    genre = re.sub("\xc2?\xa0"," ",genre)
+                    genre = re.sub("^\s*(국내도서|외국도서)\s*>\s*","",genre)
+                    category_prefix = cfg.DEFAULT_STORE_VALUES[cfg.KEY_CATEGORY_PREFIX]
+                    category_prefix = cfg.plugin_prefs[cfg.STORE_NAME].get(cfg.KEY_CATEGORY_PREFIX, category_prefix)
+                    if category_prefix:
+                        calibre_tags.append(category_prefix + ".".join(re.split("\s*\>\s*",genre)))
+                    else:
+                        calibre_tags.append(".".join(re.split("\s*\>\s*",genre)))
                 
                 
         tags_list = root.xpath('//div[@id="div_itemtaglist"]//a[contains(@href,"tagname=")]/text()')
         #self.log.info("Parsing tags")
         if tags_list:
             #self.log.info("Found tags")
-            
             convert_tag_lookup = cfg.plugin_prefs[cfg.STORE_NAME][cfg.KEY_CONVERT_TAG]
             if convert_tag_lookup:
                 tags = self._convert_genres_to_calibre_tags(tags_list)
@@ -503,3 +525,14 @@ class Worker(Thread): # Get details
             ans = canonicalize_lang(ans)
             if ans:
                 return ans
+
+    def _removeTags(self, element, tags):
+        try:
+            for node in element.getchildren():
+                if node.tag in tags:
+                    element.remove(node)
+                else:
+                    self._removeTags(node,tags)
+        except:
+            return
+            

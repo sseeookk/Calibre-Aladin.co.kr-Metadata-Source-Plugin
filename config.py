@@ -20,13 +20,18 @@ from calibre.utils.config import JSONConfig
 
 from calibre_plugins.aladin_co_kr.common_utils import ReadOnlyTableWidgetItem
 
+load_translations()
+
 STORE_NAME = 'Aladin_co_kr'
 KEY_CONVERT_TAG = 'convertTag'
-KEY_MAX_DOWNLOADS = 'maxDownloads'
-KEY_GET_CATEGORY = 'getCategory'
-KEY_GET_ALL_AUTHORS = 'getAllAuthors'
 KEY_GENRE_MAPPINGS = 'genreMappings'
+KEY_GET_CATEGORY = 'getCategory'
+KEY_CATEGORY_PREFIX = 'categoryPrefix'
+KEY_SMALL_COVER = 'smallCover'
+KEY_GET_ALL_AUTHORS = 'getAllAuthors'
 KEY_APPEND_TOC = 'appendTOC'
+KEY_COMMENTS_SUFFIX = 'commentsSuffix'
+KEY_MAX_DOWNLOADS = 'maxDownloads'
 
 DEFAULT_GENRE_MAPPINGS = {
                 'Anthologies': ['Anthologies'],
@@ -90,11 +95,14 @@ DEFAULT_GENRE_MAPPINGS = {
 
 DEFAULT_STORE_VALUES = {
     KEY_CONVERT_TAG: False,
-    KEY_MAX_DOWNLOADS: 5,
     KEY_GET_CATEGORY: True,
-    KEY_GET_ALL_AUTHORS: True,
+    KEY_GET_ALL_AUTHORS: False,
     KEY_GENRE_MAPPINGS: copy.deepcopy(DEFAULT_GENRE_MAPPINGS),
-    KEY_APPEND_TOC: True
+    KEY_SMALL_COVER: False,
+    KEY_CATEGORY_PREFIX: '☞', # ▣
+    KEY_APPEND_TOC: True,
+    KEY_COMMENTS_SUFFIX: '<hr /><div><div style="float:right">[aladin.co.kr]</div></div>',
+    KEY_MAX_DOWNLOADS: 5
 }
 
 # This is where all preferences for this plugin will be stored
@@ -114,7 +122,7 @@ class GenreTagMappingsTableWidget(QTableWidget):
         self.clear()
         self.setAlternatingRowColors(True)
         self.setRowCount(len(tag_mappings))
-        header_labels = ['Aladin Tag', 'Maps to Calibre Tag(s)']
+        header_labels = [_('Aladin Tag'), _('Maps to Calibre Tag(s)')]
         self.setColumnCount(len(header_labels))
         self.setHorizontalHeaderLabels(header_labels)
         self.verticalHeader().setDefaultSectionSize(24)
@@ -184,11 +192,18 @@ class ConfigWidget(DefaultConfigWidget):
         all_tags = get_current_db().all_tags()
 
         self.gb.setMaximumHeight(80)
-        genre_group_box = QGroupBox('Aladin tag to Calibre tag mappings', self)
+        genre_group_box = QGroupBox(_('Aladin tag to Calibre tag mappings'), self)
         self.l.addWidget(genre_group_box, self.l.rowCount(), 0, 1, 2)
         genre_group_box_layout = QVBoxLayout()
         genre_group_box.setLayout(genre_group_box_layout)
-
+        
+        # Aladin tag convert to calibre tag 20140312
+        self.get_convert_tag_checkbox = QCheckBox(_('Convert Aladin tag to Calibre tag'), self)
+        self.get_convert_tag_checkbox.setToolTip(_('Convert Aladin tag(korean tag) to Calibre tag.'))
+        self.get_convert_tag_checkbox.setChecked(c.get(KEY_CONVERT_TAG,DEFAULT_STORE_VALUES[KEY_CONVERT_TAG]))
+        genre_group_box_layout.addWidget(self.get_convert_tag_checkbox)
+        
+        
         tags_layout = QHBoxLayout()
         genre_group_box_layout.addLayout(tags_layout)
 
@@ -197,108 +212,136 @@ class ConfigWidget(DefaultConfigWidget):
         button_layout = QVBoxLayout()
         tags_layout.addLayout(button_layout)
         add_mapping_button = QtGui.QToolButton(self)
-        add_mapping_button.setToolTip('Add genre mapping')
+        add_mapping_button.setToolTip(_('Add genre mapping'))
         add_mapping_button.setIcon(QIcon(I('plus.png')))
         add_mapping_button.clicked.connect(self.add_mapping)
         button_layout.addWidget(add_mapping_button)
         spacerItem1 = QtGui.QSpacerItem(20, 40, QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Expanding)
         button_layout.addItem(spacerItem1)
         remove_mapping_button = QtGui.QToolButton(self)
-        remove_mapping_button.setToolTip('Delete genre mapping')
+        remove_mapping_button.setToolTip(_('Delete genre mapping'))
         remove_mapping_button.setIcon(QIcon(I('minus.png')))
         remove_mapping_button.clicked.connect(self.delete_mapping)
         button_layout.addWidget(remove_mapping_button)
         spacerItem3 = QtGui.QSpacerItem(20, 40, QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Expanding)
         button_layout.addItem(spacerItem3)
         rename_genre_button = QtGui.QToolButton(self)
-        rename_genre_button.setToolTip('Rename Aladin genre')
+        rename_genre_button.setToolTip(_('Rename Aladin genre'))
         rename_genre_button.setIcon(QIcon(I('edit-undo.png')))
         rename_genre_button.clicked.connect(self.rename_genre)
         button_layout.addWidget(rename_genre_button)
         spacerItem2 = QtGui.QSpacerItem(20, 40, QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Expanding)
         button_layout.addItem(spacerItem2)
         reset_defaults_button = QtGui.QToolButton(self)
-        reset_defaults_button.setToolTip('Reset to plugin default mappings')
+        reset_defaults_button.setToolTip(_('Reset to plugin default mappings'))
         reset_defaults_button.setIcon(QIcon(I('clear_left.png')))
         reset_defaults_button.clicked.connect(self.reset_to_defaults)
         button_layout.addWidget(reset_defaults_button)
         self.l.setRowStretch(self.l.rowCount()-1, 2)
-
-        other_group_box = QGroupBox('Other options', self)
+        
+        
+        other_group_box = QGroupBox(_('Other options'), self)
         self.l.addWidget(other_group_box, self.l.rowCount(), 0, 1, 2)
         other_group_box_layout = QVBoxLayout()
         other_group_box.setLayout(other_group_box_layout)
-
-
-
-        # Aladin tag convert to calibre tag 20140312
-        self.get_convert_tag_checkbox = QCheckBox('Convert Aladin tag to Calibre tag', self)
-        self.get_convert_tag_checkbox.setToolTip('Convert Aladin tag(korean tag) to Calibre tag.')
-        self.get_convert_tag_checkbox.setChecked(c[KEY_CONVERT_TAG])
-        other_group_box_layout.addWidget(self.get_convert_tag_checkbox)
-
-
-
-        max_label = QLabel('Maximum title/author search matches to evaluate (1 = fastest):', self)
-        max_label.setToolTip('Aladin do not always have links to large covers for every ISBN\n'
-                             'of the same book. Increasing this value will take effect when doing\n'
-                             'title/author searches to consider more ISBN editions.\n\n'
-                             'This will increase the potential likelihood of getting a larger cover\n'
-                             'though does not guarantee it.')
-        other_group_box_layout.addWidget(max_label) #, 0, 0, 1, 1)
+        
+        
+        # DID: category | v0.1.0 20140315
+        self.get_category_checkbox = QCheckBox(_('Add Aladin Categories to Calibre tags'), self)
+        self.get_category_checkbox.setToolTip(_('Add Aladin Categories to Calibre tags.\n'
+            'This Plugin will change delimiter ">" to delimiter "." for Category Hierarchy.\n'
+            '(ex, "Category Prefix"History.Korea Culture.History Journey)\n '))
+        self.get_category_checkbox.stateChanged.connect(self.get_category_checkbox_changed)
+        other_group_box_layout.addWidget(self.get_category_checkbox)
+        
+        self.category_group_box = QGroupBox(self)
+        category_group_box_layout = QtGui.QGridLayout()
+        self.category_group_box.setLayout(category_group_box_layout)
+        other_group_box_layout.addWidget(self.category_group_box)
+        
+        # DID: 주제분류 category - 머리글  | v0.2.0 20140330
+        category_prefix_label = QtGui.QLabel(_('Category Prefix'),self)
+        category_prefix_label.setToolTip(_('Set strings before categories to distinguish other tags.\n'
+            '(예, ☞History.Korea Culture.History Journey)\n '))
+        category_group_box_layout.addWidget(category_prefix_label, 0, 0, 1, 1)
+        self.category_prefix_edit = QtGui.QLineEdit(self)
+        self.category_prefix_edit.setText(c.get(KEY_CATEGORY_PREFIX,DEFAULT_STORE_VALUES[KEY_CATEGORY_PREFIX]))
+        category_group_box_layout.addWidget(self.category_prefix_edit, 0, 1, 1, 1)
+        
+        self.get_category_checkbox.setChecked(c.get(KEY_GET_CATEGORY,DEFAULT_STORE_VALUES[KEY_GET_CATEGORY]))
+        
+        # DID: 책표지(cover)를 큰것/작은것(big/small) 선택할 수 있도록 하자. | v0.2.0 20140330
+        self.small_cover_checkbox = QCheckBox(_('Download small cover.'), self)
+        self.small_cover_checkbox.setToolTip(_('Download small cover from aladin.'))
+        self.small_cover_checkbox.setChecked(c.get(KEY_SMALL_COVER, DEFAULT_STORE_VALUES[KEY_SMALL_COVER]))
+        other_group_box_layout.addWidget(self.small_cover_checkbox)
+        
+        self.all_authors_checkbox = QCheckBox(_('Get all contributing authors (e.g. illustrators, series editors etc)'), self)
+        self.all_authors_checkbox.setToolTip(_('Aladin for some books will list all of the contributing authors and\n'
+              'the type of contribution like (Editor), (Illustrator) etc.\n\n'
+              'When this option is checked, all contributing authors are retrieved.\n\n'
+              'When unchecked (default) only the primary author(s) are returned which\n'
+              'are those that either have no contribution type specified, or have the\n'
+              'value of (Aladin Author).\n\n'
+              'If there is no primary author then only those with the same contribution\n'
+              'type as the first author are returned.\n'
+              'e.g. "A, B (Illustrator)" will return author A\n'
+              'e.g. "A (Aladin Author)" will return author A\n'
+              'e.g. "A (Editor), B (Editor), C (Illustrator)" will return authors A & B\n'
+              'e.g. "A (Editor), B (Series Editor)" will return author A\n '))
+        self.all_authors_checkbox.setChecked(c.get(KEY_GET_ALL_AUTHORS, DEFAULT_STORE_VALUES[KEY_GET_ALL_AUTHORS]))
+        other_group_box_layout.addWidget(self.all_authors_checkbox)
+        
+        # Add by sseeookk, 20140315
+        self.toc_checkbox = QCheckBox(_('Append TOC from Aladin TOC if available to comments'), self)
+        self.toc_checkbox.setToolTip(_('Aladin for textbooks on their website have a Features which\n'
+              'contains a table of contents for the book. Checking this option will\n'
+              'append the TOC to the bottom of the Synopsis in the comments field'))
+        self.toc_checkbox.setChecked(c.get(KEY_APPEND_TOC, DEFAULT_STORE_VALUES[KEY_APPEND_TOC]))
+        other_group_box_layout.addWidget(self.toc_checkbox)
+        
+        # DID: 책소개(comment) 끝에 출처를 적으면 어떨까? | v0.2.0 20140330
+        #       코멘트 뒤에 붙을 내용 (예, aladin.co.kr{날짜}) 
+        comments_suffix_label = QLabel(_('Append comments suffix:'), self)
+        comments_suffix_label.setToolTip(_('Append comments source after comments.\n'
+            '(ex, <hr /><div><div style="float:right">[aladin.co.kr]</div></div>)\n '))
+        other_group_box_layout.addWidget(comments_suffix_label)
+        self.comments_suffix_edit = QtGui.QLineEdit(self)
+        self.comments_suffix_edit.setText(c.get(KEY_COMMENTS_SUFFIX, DEFAULT_STORE_VALUES[KEY_COMMENTS_SUFFIX]))
+        other_group_box_layout.addWidget(self.comments_suffix_edit)
+        
+        max_label = QLabel(_('Maximum title/author search matches to evaluate (1 = fastest):'), self)
+        max_label.setToolTip(_('Increasing this value will take effect when doing\n'
+             'title/author searches to consider more books.\n '))
+        other_group_box_layout.addWidget(max_label)
         self.max_downloads_spin = QtGui.QSpinBox(self)
         self.max_downloads_spin.setMinimum(1)
         self.max_downloads_spin.setMaximum(20)
         self.max_downloads_spin.setProperty('value', c.get(KEY_MAX_DOWNLOADS, DEFAULT_STORE_VALUES[KEY_MAX_DOWNLOADS]))
-        other_group_box_layout.addWidget(self.max_downloads_spin)#, 0, 1, 1, 1)
-        #other_group_box_layout.setColumnStretch(2, 1)
-
-
-        # by CYS, category 20140315
-        self.get_category_checkbox = QCheckBox('Add Aladin Categories to Calibre tags', self)
-        self.get_category_checkbox.setToolTip('Add Aladin Categories to Calibre tags(ex, [Domestic Books > History > Korea Culture / History Journey]).')
-        self.get_category_checkbox.setChecked(c[KEY_GET_CATEGORY])
-        other_group_box_layout.addWidget(self.get_category_checkbox)
+        other_group_box_layout.addWidget(self.max_downloads_spin)
         
-        
-        self.all_authors_checkbox = QCheckBox('Get all contributing authors (e.g. illustrators, series editors etc)', self)
-        self.all_authors_checkbox.setToolTip('Aladin for some books will list all of the contributing authors and\n'
-                                              'the type of contribution like (Editor), (Illustrator) etc.\n\n'
-                                              'When this option is checked, all contributing authors are retrieved.\n\n'
-                                              'When unchecked (default) only the primary author(s) are returned which\n'
-                                              'are those that either have no contribution type specified, or have the\n'
-                                              'value of (Aladin Author).\n\n'
-                                              'If there is no primary author then only those with the same contribution\n'
-                                              'type as the first author are returned.\n'
-                                              'e.g. "A, B (Illustrator)" will return author A\n'
-                                              'e.g. "A (Aladin Author)" will return author A\n'
-                                              'e.g. "A (Editor), B (Editor), C (Illustrator)" will return authors A & B\n'
-                                              'e.g. "A (Editor), B (Series Editor)" will return author A\n')
-        self.all_authors_checkbox.setChecked(c[KEY_GET_ALL_AUTHORS])
-        other_group_box_layout.addWidget(self.all_authors_checkbox)
-        
-        # Add by CYS, 20140315
-        self.toc_checkbox = QCheckBox('Append TOC from Features tab if available to comments', self)
-        self.toc_checkbox.setToolTip('Aladin for textbooks on their website have a Features tab which\n'
-                                      'contains a table of contents for the book. Checking this option will\n'
-                                      'append the TOC to the bottom of the Synopsis in the comments field')
-        self.toc_checkbox.setChecked(c.get(KEY_APPEND_TOC, DEFAULT_STORE_VALUES[KEY_APPEND_TOC]))
-        # other_group_box_layout.addWidget(self.toc_checkbox, 2, 0, 1, 3)
-        other_group_box_layout.addWidget(self.toc_checkbox)
-
         self.edit_table.populate_table(c[KEY_GENRE_MAPPINGS])
-
+    
     def commit(self):
         DefaultConfigWidget.commit(self)
         new_prefs = {}
         new_prefs[KEY_CONVERT_TAG] = self.get_convert_tag_checkbox.checkState() == Qt.Checked
-        new_prefs[KEY_MAX_DOWNLOADS] = int(unicode(self.max_downloads_spin.value()))
+        new_prefs[KEY_GENRE_MAPPINGS] = self.edit_table.get_data()
         new_prefs[KEY_GET_CATEGORY] = self.get_category_checkbox.checkState() == Qt.Checked
+        new_prefs[KEY_CATEGORY_PREFIX] = unicode(self.category_prefix_edit.text())
+        new_prefs[KEY_SMALL_COVER] = self.small_cover_checkbox.checkState() == Qt.Checked
         new_prefs[KEY_GET_ALL_AUTHORS] = self.all_authors_checkbox.checkState() == Qt.Checked
         new_prefs[KEY_APPEND_TOC] = self.toc_checkbox.checkState() == Qt.Checked
-        new_prefs[KEY_GENRE_MAPPINGS] = self.edit_table.get_data()
+        new_prefs[KEY_COMMENTS_SUFFIX] = str(self.comments_suffix_edit.text())
+        new_prefs[KEY_MAX_DOWNLOADS] = int(unicode(self.max_downloads_spin.value()))
         plugin_prefs[STORE_NAME] = new_prefs
-
+    
+    def get_category_checkbox_changed(self):
+        if self.get_category_checkbox.checkState() == Qt.Checked:
+            self.category_prefix_edit.setEnabled(True)
+        else:
+            self.category_prefix_edit.setEnabled(False)
+        
     def add_mapping(self):
         new_genre_name, ok = QInputDialog.getText(self, 'Add new mapping',
                     'Enter a Aladin tag name to create a mapping for:', text='')

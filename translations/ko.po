@@ -1,0 +1,207 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: calibre_aladin.co.kr_metadata_source_translations_ko\n"
+"POT-Creation-Date: 2014-03-31 20:44+0900\n"
+"PO-Revision-Date: 2014-03-31 20:53+0900\n"
+"Last-Translator: \n"
+"Language-Team: sseeookk <sseeookk@gmail.com>\n"
+"Language: ko_KR\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Generator: Poedit 1.6.4\n"
+"X-Poedit-Basepath: .\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+"X-Poedit-SourceCharset: UTF-8\n"
+"X-Poedit-SearchPath-0: ..\n"
+
+#: ../__init__.py:32
+msgid "Downloads metadata and covers from aladin.co.kr"
+msgstr "알라딘(aladin.co.kr)에서 책정보와 책표지 내려받기"
+
+#: ../common_utils.py:229
+msgid "Restart required"
+msgstr "재시작 필요"
+
+#: ../common_utils.py:230
+msgid ""
+"Title image not found - you must restart Calibre before using this plugin!"
+msgstr ""
+
+#: ../common_utils.py:510
+msgid "Undefined"
+msgstr "알 수 없음"
+
+#: ../common_utils.py:596
+msgid "Restart calibre now"
+msgstr "지금 캘리버 재시작"
+
+#: ../config.py:125
+msgid "Aladin Tag"
+msgstr "알라딘 태그"
+
+#: ../config.py:125
+msgid "Maps to Calibre Tag(s)"
+msgstr "엮인 캘리버 태그(들)"
+
+#: ../config.py:195
+msgid "Aladin tag to Calibre tag mappings"
+msgstr "알라딘 태그를 캘리버 태그로 바꾸기"
+
+#: ../config.py:201
+msgid "Convert Aladin tag to Calibre tag"
+msgstr "알라딘 태그를 캘리버 태그로 바꾸기를 사용하기"
+
+#: ../config.py:202
+msgid "Convert Aladin tag(korean tag) to Calibre tag."
+msgstr ""
+"알라딘 태그를 캘리버 태그로 바꾸기. \n"
+"하나의 알라딘 태그를 여러 캘리버 태그로 만들 수 있다. \n"
+"또 엮이지 않은 태그들은 무시된다.\n"
+" "
+
+#: ../config.py:216
+msgid "Add genre mapping"
+msgstr "엮인 태그 더하기"
+
+#: ../config.py:223
+msgid "Delete genre mapping"
+msgstr "엮인 태그 지우기"
+
+#: ../config.py:230
+msgid "Rename Aladin genre"
+msgstr "엮인 태그 이름 바꾸기"
+
+#: ../config.py:237
+msgid "Reset to plugin default mappings"
+msgstr "처음 태그 엮음 값으로 되돌리기"
+
+#: ../config.py:244
+msgid "Other options"
+msgstr "기타 설정"
+
+#: ../config.py:251
+msgid "Add Aladin Categories to Calibre tags"
+msgstr "알라딘 주제분류를 캘리버 태그로 바꾸기"
+
+#: ../config.py:252
+msgid ""
+"Add Aladin Categories to Calibre tags.\n"
+"This Plugin will change delimiter \">\" to delimiter \".\" for Category "
+"Hierarchy.\n"
+"(ex, \"Category Prefix\"History.Korea Culture.History Journey)\n"
+" "
+msgstr ""
+"알라딘 주제분류를 캘리버 태그로 받아오기.\n"
+"알라딘의 구분자 \">\"를 \".\"로 바꾸어 카테고리를 계층적으로 쓸 수 있도록 한"
+"다.\n"
+"(예, \"주제분류 머릿글자\"역사.한국 문화.역사 기행)\n"
+" "
+
+#: ../config.py:264
+msgid "Category Prefix"
+msgstr "주제분류 머릿글자"
+
+#: ../config.py:265
+msgid ""
+"Set strings before categories to distinguish other tags.\n"
+"(예, ☞History.Korea Culture.History Journey)\n"
+" "
+msgstr ""
+"다른 태그들과 구분하기 위한 글자.\n"
+"(예, ☞역사.한국 문화.역사기행)\n"
+" "
+
+#: ../config.py:275
+msgid "Download small cover."
+msgstr "작은 표지 내려받기"
+
+#: ../config.py:276
+msgid "Download small cover from aladin."
+msgstr "알라딘에서 작은 표지 내려받기"
+
+#: ../config.py:281
+msgid "Get all contributing authors (e.g. illustrators, series editors etc)"
+msgstr "모든 지은이 쓰기 (예, 지은이, 엮은이, 그림, 감수 등)"
+
+#: ../config.py:282
+msgid ""
+"Aladin for some books will list all of the contributing authors and\n"
+"the type of contribution like (Editor), (Illustrator) etc.\n"
+"\n"
+"When this option is checked, all contributing authors are retrieved.\n"
+"\n"
+"When unchecked (default) only the primary author(s) are returned which\n"
+"are those that either have no contribution type specified, or have the\n"
+"value of (Aladin Author).\n"
+"\n"
+"If there is no primary author then only those with the same contribution\n"
+"type as the first author are returned.\n"
+"e.g. \"A, B (Illustrator)\" will return author A\n"
+"e.g. \"A (Aladin Author)\" will return author A\n"
+"e.g. \"A (Editor), B (Editor), C (Illustrator)\" will return authors A & B\n"
+"e.g. \"A (Editor), B (Series Editor)\" will return author A\n"
+" "
+msgstr ""
+"알라딘에서는 (지은이), (엮은이), (그림) 등으로 지은이들을 보여준다.\n"
+"이 선택을 체크하면 모든 지은이들을 가져온다.\n"
+"이 선택이 체크되지 않으면 처음 나온 지은이만을 가져온다.\n"
+" "
+
+#: ../config.py:298
+msgid "Append TOC from Aladin TOC if available to comments"
+msgstr "알라딘 목차를 책소개에 덧붙이기"
+
+#: ../config.py:299
+msgid ""
+"Aladin for textbooks on their website have a Features which\n"
+"contains a table of contents for the book. Checking this option will\n"
+"append the TOC to the bottom of the Synopsis in the comments field"
+msgstr "알라딘 목차를 받아와 책소개의 끄트머리에 덧붙이기."
+
+#: ../config.py:308
+msgid "Append comments suffix:"
+msgstr "책소개 꼬리글 더하기"
+
+#: ../config.py:309
+msgid ""
+"Append comments source after comments.\n"
+"(ex, <hr /><div><div style=\"float:right\">[aladin.co.kr]</div></div>)\n"
+" "
+msgstr ""
+"책소개 끄트머리에 꼬리글을 넣을 수 있다.\n"
+"(예, 책소개를 내려받은 곳, <hr /><div><div style=\"float:right\">[aladin.co."
+"kr]</div></div>)\n"
+" "
+
+#: ../config.py:316
+msgid "Maximum title/author search matches to evaluate (1 = fastest):"
+msgstr ""
+"알라딘 검색 페이지에서 얻어와 책 제목/지은이 비교를 실행할 책의 최대 갯수 "
+
+#: ../config.py:317
+msgid ""
+"Increasing this value will take effect when doing\n"
+"title/author searches to consider more books.\n"
+" "
+msgstr ""
+"알라딘 검색 페이지에서 책 제목/지은이로 검색여 나온 책들 가운데 비교를 실행"
+"할 책의 최대 갯수를 제한할 수 있다. "
+
+#: ../config.py:369 ../config.py:400
+msgid "Are you sure?"
+msgstr "맞습니까?"
+
+#~ msgid ""
+#~ "Aladin do not always have links to large covers for every ISBN\n"
+#~ "of the same book. Increasing this value will take effect when doing\n"
+#~ "title/author searches to consider more ISBN editions.\n"
+#~ "\n"
+#~ "This will increase the potential likelihood of getting a larger cover\n"
+#~ "though does not guarantee it."
+#~ msgstr "알라딘에서는"
+
+#~ msgid "Append comments source after comments"
+#~ msgstr ""
+#~ "책소개 끄트머리에 덧붙일 글을 넣을 수 있습니다. (예, 책소개를 내려받은 "
+#~ "곳, <hr /><div><div style=\"float:right\">[aladin.co.kr]</div></div>)"
