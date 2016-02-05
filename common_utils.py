@@ -19,7 +19,8 @@ import os
 try:
     from PyQt4 import QtGui
 except ImportError:
-    from PyQt5 import QtGui
+#    from PyQt5 import QtGui
+    from PyQt5 import Qt as QtGui
 try:
     from PyQt4.Qt import (Qt, QIcon, QPixmap, QLabel, QDialog, QHBoxLayout,
                           QTableWidgetItem, QFont, QLineEdit, QComboBox,
@@ -39,6 +40,7 @@ from calibre.gui2.actions import menu_action_unique_name
 
 #20141108
 #from calibre.gui2.complete import MultiCompleteComboBox
+from calibre.gui2.complete2 import EditWithComplete 
 
 from calibre.gui2.keyboard import ShortcutConfig
 from calibre.gui2.widgets import EnLineEdit
@@ -571,7 +573,7 @@ class CompleteDelegate(QStyledItemDelegate):
                 # to lookup a column name. The calibre one will rely on stuff
                 # on the model, we will rely on a callback function instead
                 col = self.col_fn(index.column())
-            editor = MultiCompleteComboBox(parent)
+            editor = EditWithComplete(parent)
             editor.set_separator(self.sep)
             editor.set_space_before_sep(self.space_before_sep)
             if self.sep == '&':
@@ -591,7 +593,7 @@ class CompleteDelegate(QStyledItemDelegate):
         return editor
 
     def setModelData(self, editor, model, index):
-        if isinstance(editor, MultiCompleteComboBox):
+        if isinstance(editor, EditWithComplete):
             val = editor.lineEdit().text()
             model.setData(index, QVariant(val), Qt.EditRole)
         else:

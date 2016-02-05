@@ -31,7 +31,7 @@ class Aladin_co_kr(Source):
     name = 'Aladin.co.kr'
     description = _('Downloads metadata and covers from aladin.co.kr')
     author = 'YongSeok Choi'
-    version = (0, 2, 1)
+    version = (0, 2, 2)
     minimum_calibre_version = (0, 8, 0)
     
     

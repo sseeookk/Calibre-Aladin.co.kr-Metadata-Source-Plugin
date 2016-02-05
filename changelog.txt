@@ -1,8 +1,13 @@
+[B]Version 0.2.1[/B] - 11-10-2014
+[LIST]
+[*]Fix PyQt4 to PyQt5 as Calibre moving to Qt 5.
+[/LIST]
+
 [B]Version 0.2.0[/B] - 03-31-2014
 [LIST]
-[*]Change to modify delimiter \">\" of Aladin Categories to delimiter \".\" for Category Hierarchy.
-[*]Option of Category Prefix to distinguish Categories from other tags.
-[*]Option to download small/large cover.
+[*]Change to modify delimiter ">" of Aladin Categories to delimiter "." for Category Hierarchy.
+[*]Add option of Category Prefix to distinguish Categories from other tags.
+[*]Add option to download small/large cover.
 [*]Change to remove useless html tags(object,script,style) in Aladin comments.
 [*]Add Translation file of Korean.
 [/LIST]
@@ -10,8 +15,8 @@
 [B]Version 0.1.0[/B] - 03-18-2014
 Initial release of Aladin.co.kr Metadata Source Plugin
 [LIST]
-[*]Can retrieve aladin.co.kr id, title, author, series, isbn, comments, TOC, rating, publisher, publication date, tags, language and covers(large cover).
-[*]Option to customise the aladin.co.kr tag -> Calibre tag mappings. A default set of the most popular genre tag mappings is included as a starting point.
-[*]Option to retrieve the aladin.co.kr Categories to Calibre tag enclosed in square brackets.
-[*]Option to retrieve all contributors to a book as an author. By default this is turned off, however aladin.co.kr is able to provide illustrators, editors etc should you want these retrieved.
+[*]Retrieve aladin.co.kr id, title, author, series, isbn, comments, TOC, rating, publisher, publication date, tags, language and covers(large cover).
+[*]Add option to customise the aladin.co.kr tag -> Calibre tag mappings. A default set of the most popular genre tag mappings is included as a starting point.
+[*]Add option to retrieve the aladin.co.kr Categories to Calibre tag enclosed in square brackets.
+[*]Add option to retrieve all contributors to a book as an author. By default this is turned off, however aladin.co.kr is able to provide illustrators, editors etc should you want these retrieved.
 [/LIST]

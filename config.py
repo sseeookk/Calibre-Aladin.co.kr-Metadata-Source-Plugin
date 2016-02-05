@@ -1,5 +1,9 @@
 ﻿#!/usr/bin/env python
 # vim:fileencoding=UTF-8:ts=4:sw=4:sta:et:sts=4:ai
+
+# 2015-03-19 21:31:47
+# <META http-equiv='Content-Type' content='text/html; charset=euc-kr'>
+
 from __future__ import (unicode_literals, division, absolute_import,
                         print_function)
 
@@ -11,13 +15,17 @@ import copy
 from functools import partial
 
 #20141108 16:27:50
+# Guide for porting plugin code to Qt 5
+# http://www.mobileread.com/forums/showthread.php?s=7481b956408dfd9ac4f896e25cc72a1d&t=242223
 #from PyQt4 import QtGui
 #from PyQt4.Qt import (QLabel,QTableWidgetItem, QVBoxLayout, Qt, QGroupBox, QTableWidget,
 #                      QCheckBox, QAbstractItemView, QHBoxLayout, QIcon,QInputDialog)
 try:
     from PyQt4 import QtGui
 except ImportError:
-    from PyQt5 import QtGui
+#    from PyQt5 import QtGui
+#    from PyQt5 import QtWidgets as QtGui
+    from PyQt5 import Qt as QtGui
 try:
     from PyQt4.Qt import (QLabel,QTableWidgetItem, QVBoxLayout, Qt, QGroupBox, QTableWidget,
                           QCheckBox, QAbstractItemView, QHBoxLayout, QIcon,QInputDialog)
@@ -29,6 +37,7 @@ from calibre.gui2 import get_current_db, question_dialog, error_dialog
 
 #20141108
 #from calibre.gui2.complete import MultiCompleteLineEdit
+from calibre.gui2.complete2 import EditWithComplete
 
 from calibre.gui2.metadata.config import ConfigWidget as DefaultConfigWidget
 from calibre.utils.config import JSONConfig
@@ -164,11 +173,11 @@ class GenreTagMappingsTableWidget(QTableWidget):
         self.setCellWidget(row, 1, self.create_tags_edit(tags_value, row))
 
     def create_tags_edit(self, value, row):
-        tags_edit = MultiCompleteLineEdit(self)
+        tags_edit = EditWithComplete(self)
         tags_edit.set_add_separator(False)
         tags_edit.update_items_cache(self.tags_values)
         tags_edit.setText(value)
-        tags_edit.editingFinished.connect(partial(self.tags_editing_finished, row, tags_edit))
+#        tags_edit.editingFinished.connect(partial(self.tags_editing_finished, row, tags_edit))
         return tags_edit
 
     def tags_editing_finished(self, row, tags_edit):

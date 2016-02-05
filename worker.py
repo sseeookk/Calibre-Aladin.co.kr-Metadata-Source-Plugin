@@ -318,8 +318,9 @@ class Worker(Thread): # Get details
                 
         if rawDesc:
             try:
-                rawDesc = rawDesc.decode('euc-kr', errors='replace')
-                # rawDesc = rawDesc.decode('utf-8', errors='replace')
+                #rawDesc = rawDesc.decode('euc-kr', errors='replace')
+                # 2015-03-19 22:26:51
+                rawDesc = rawDesc.decode('utf-8', errors='replace')
                 rootDesc = fromstring(clean_ascii_chars(rawDesc))
                 nodeDesc = rootDesc.xpath('//div[@class="p_textbox"]')
                 if nodeDesc :
