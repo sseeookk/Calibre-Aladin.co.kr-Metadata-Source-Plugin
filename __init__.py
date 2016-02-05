@@ -31,7 +31,7 @@ class Aladin_co_kr(Source):
     name = 'Aladin.co.kr'
     description = _('Downloads metadata and covers from aladin.co.kr')
     author = 'YongSeok Choi'
-    version = (0, 2, 2)
+    version = (0, 2, 3)
     minimum_calibre_version = (0, 8, 0)
     
     
@@ -44,6 +44,9 @@ class Aladin_co_kr(Source):
         'tags', 'series', 'languages'])
     has_html_comments = True
     supports_gzip_transfer_encoding = True
+    
+    # 201602 aladin url patterns :
+    # http://www.aladin.co.kr/shop/wproduct.aspx?ItemId=27942886
     
     # 201403 aladin url patterns :
     # http://www.aladin.co.kr/shop/wproduct.aspx?ISBN=8965744024
@@ -64,8 +67,11 @@ class Aladin_co_kr(Source):
 
     def get_book_url(self, identifiers):
         aladin_id = identifiers.get('aladin.co.kr', None)
-        if aladin_id:
-            return ('aladin.co.kr', aladin_id, '%s/shop/wproduct.aspx?ISBN=%s' % (Aladin_co_kr.BASE_URL, aladin_id))
+        isbn = check_isbn(identifiers.get('isbn', None))
+        if isbn:
+            return ('aladin.co.kr', aladin_id, '%s/shop/wproduct.aspx?ISBN=%s' % (Aladin_co_kr.BASE_URL, isbn))
+        elif aladin_id:
+            return ('aladin.co.kr', aladin_id, '%s/shop/wproduct.aspx?ItemId=%s' % (Aladin_co_kr.BASE_URL, aladin_id))
 
     def create_query(self, log, title=None, authors=None, identifiers={}):
 
@@ -135,8 +141,10 @@ class Aladin_co_kr(Source):
         aladin_id = identifiers.get('aladin.co.kr', None)
         isbn = check_isbn(identifiers.get('isbn', None))
         br = self.browser
-        if aladin_id:
-            matches.append('%s/shop/wproduct.aspx?ISBN=%s' % (Aladin_co_kr.BASE_URL, aladin_id))
+        if isbn:
+            matches.append('%s/shop/wproduct.aspx?ISBN=%s' % (Aladin_co_kr.BASE_URL, isbn))
+        elif aladin_id:
+            matches.append('%s/shop/wproduct.aspx?ItemId=%s' % (Aladin_co_kr.BASE_URL, aladin_id))
         else:
             query = self.create_query(log, title=title, authors=authors, identifiers=identifiers)
             if query is None:

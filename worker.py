@@ -204,10 +204,10 @@ class Worker(Thread): # Get details
         self.result_queue.put(mi)
 
     def parse_aladin_id(self, url):
-        return re.search('wproduct\.aspx\?ISBN\=(.+)', url).groups(0)[0]
+        return re.search('wproduct\.aspx\?ItemId\=(.+)', url).groups(0)[0]
 
     def parse_title_series(self, root):
-        title_node = root.xpath('//div[@class="t_div"]/..')
+        title_node = root.xpath('//a[@class="p_topt01"]/..')
         if not title_node:
             return (None, None, None)
         series_node = title_node[0].xpath('.//a[contains(@href,"wseriesitem.aspx")]')
@@ -215,10 +215,19 @@ class Worker(Thread): # Get details
             title_text = title_node[0].text_content().strip()
             return (title_text, None, None)
         series_info = series_node[0].text_content().strip()
+        
+        # title에서 series 지우기 
+        # 2016-02-03 안된다.
         series_node_parent = series_node[0].getparent()
         series_node_parent.getparent().remove(series_node_parent);
         
         title_text = title_node[0].text_content().strip()
+        
+        # 2016-02-03 추가
+        title_text = re.sub('\l\s*' + series_info, "", title_text)
+        title_text = title_text.strip()
+        
+        #title_text = title_node[0].text_content().strip()
         
         if series_info:
             match = re.search("\s+(\d+)\s*$",series_info)
@@ -288,10 +297,11 @@ class Worker(Thread): # Get details
             return rating_value
 
     def parse_comments(self, root):
+        # <!-- 책소개-->
         # aladin uses other request for description and toc.
         # http://www.aladin.co.kr/shop/product/getContents.aspx?ISBN=8970122648&name=Introduce&type=0&date=16
         
-        urlDesc = "http://www.aladin.co.kr/shop/product/getContents.aspx?ISBN=%s&name=Introduce&type=0&date=%s" % (self.aladin_id,datetime.datetime.now().hour)
+        urlDesc = "http://www.aladin.co.kr/shop/product/getContents.aspx?ISBN=%s&name=Introduce&type=0&date=%s" % (self.isbn,datetime.datetime.now().hour)
         
         # TODO: foreign book description
         # 출판사 제공 책소개 - 외국 도서,
@@ -334,9 +344,9 @@ class Worker(Thread): # Get details
             append_toc = cfg.plugin_prefs[cfg.STORE_NAME].get(cfg.KEY_APPEND_TOC, default_append_toc)
         
             if rootDesc and append_toc:
-                toc_node = rootDesc.xpath('//div[@id="div_TOC_All"]/p')
+                toc_node = rootDesc.xpath('//div[@id="div_TOC_All"]//p')
                 if not toc_node:
-                    toc_node = rootDesc.xpath('//div[@id="div_TOC_Short"]/p')
+                    toc_node = rootDesc.xpath('//div[@id="div_TOC_Short"]//p')
                 if toc_node:
                     toc = tostring(toc_node[0], method='html')
                     toc = sanitize_comments_html(toc)
@@ -513,19 +523,18 @@ class Worker(Thread): # Get details
     # Aladin 에서 언어를 찾을 수 없을 때
     # 기본 언어로 Korean 을 넣는다.
     def _parse_language(self, root):
+        raw = "Korean"
         lang_node = root.xpath('//div[@class="p_goodstd03"]')
         if lang_node:
             match = re.search("%s\s?:\s?([^\s]*)" % u'언어',lang_node[0].text_content(),re.I)
             if match:
                 raw = match.group(1)
-            else:
-                raw = "Korean"
-            ans = self.lang_map.get(raw, None)
-            if ans:
-                return ans
-            ans = canonicalize_lang(ans)
-            if ans:
-                return ans
+        ans = self.lang_map.get(raw, None)
+        if ans:
+            return ans
+        ans = canonicalize_lang(ans)
+        if ans:
+            return ans
 
     def _removeTags(self, element, tags):
         try:
