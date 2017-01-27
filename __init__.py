@@ -31,7 +31,7 @@ class Aladin_co_kr(Source):
     name = 'Aladin.co.kr'
     description = _('Downloads metadata and covers from aladin.co.kr')
     author = 'YongSeok Choi'
-    version = (0, 2, 3)
+    version = (0, 2, 4)
     minimum_calibre_version = (0, 8, 0)
     
     
@@ -67,10 +67,7 @@ class Aladin_co_kr(Source):
 
     def get_book_url(self, identifiers):
         aladin_id = identifiers.get('aladin.co.kr', None)
-        isbn = check_isbn(identifiers.get('isbn', None))
-        if isbn:
-            return ('aladin.co.kr', aladin_id, '%s/shop/wproduct.aspx?ISBN=%s' % (Aladin_co_kr.BASE_URL, isbn))
-        elif aladin_id:
+        if aladin_id:
             return ('aladin.co.kr', aladin_id, '%s/shop/wproduct.aspx?ItemId=%s' % (Aladin_co_kr.BASE_URL, aladin_id))
 
     def create_query(self, log, title=None, authors=None, identifiers={}):

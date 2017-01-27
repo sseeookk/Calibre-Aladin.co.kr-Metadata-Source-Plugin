@@ -204,7 +204,7 @@ class Worker(Thread): # Get details
         self.result_queue.put(mi)
 
     def parse_aladin_id(self, url):
-        return re.search('wproduct\.aspx\?ItemId\=(.+)', url).groups(0)[0]
+        return re.search('wproduct\.aspx\?ItemId\=(.+)', url).group(1)
 
     def parse_title_series(self, root):
         title_node = root.xpath('//a[@class="p_topt01"]/..')
