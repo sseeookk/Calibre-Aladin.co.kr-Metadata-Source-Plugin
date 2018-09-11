@@ -12,7 +12,7 @@ Install
 
 Calibre Plugins Forum
 ---------------------
-[Metadata Source Plugin] Aladin.co.kr (KO) - MobileRead Forums.
+[Metadata Source Plugin] Aladin.co.kr (KO) - MobileRead Forums.  
 https://www.mobileread.com/forums/showthread.php?t=236797
 
 
