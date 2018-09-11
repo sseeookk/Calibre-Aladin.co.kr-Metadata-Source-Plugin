@@ -1,3 +1,12 @@
+[B]Version 0.2.5[/B] - 09-11-2018
+[LIST]
+[*]Fix UnicodeDecodeError
+[*]Fix to get ISBN data from Aladin Book Page.
+[*]Fix to 'Download metadata' at Book with ISBN data.
+[/LIST]
+
+[B]Version 0.2.4[/B] - 01-27-2017
+
 [B]Version 0.2.3[/B] - 02-05-2016
 
 [B]Version 0.2.1[/B] - 11-10-2014

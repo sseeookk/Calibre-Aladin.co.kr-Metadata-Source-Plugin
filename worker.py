@@ -76,6 +76,7 @@ class Worker(Thread): # Get details
             return
 
         # raw = raw.decode('utf-8', errors='replace') #00
+        raw = raw.decode('euc-kr', 'ignore')
 
         # if '<title>404 - ' in raw:
             # self.log.error('URL malformed: %r'%self.url)
@@ -117,7 +118,7 @@ class Worker(Thread): # Get details
 
     def parse_details(self, root):
         try:
-            aladin_id = self.parse_aladin_id(self.url)
+            aladin_id = self.parse_aladin_id(self.url, root)
         except:
             self.log.exception('Error parsing aladin id for url: %r'%self.url)
             aladin_id = None
@@ -203,8 +204,13 @@ class Worker(Thread): # Get details
 
         self.result_queue.put(mi)
 
-    def parse_aladin_id(self, url):
-        return re.search('wproduct\.aspx\?ItemId\=(.+)', url).group(1)
+    def parse_aladin_id(self, url, root):
+        match = re.search('wproduct\.aspx\?ItemId\=(.+)', url)
+        if match:
+            return match.group(1)
+
+        page_url = root.xpath('//meta[@property="og:url"]')[0].attrib['content']
+        return re.search('wproduct\.aspx\?ItemId\=(.+)', page_url).group(1)
 
     def parse_title_series(self, root):
         title_node = root.xpath('//a[@class="p_topt01"]/..')
@@ -401,9 +407,9 @@ class Worker(Thread): # Get details
     
     
     def parse_isbn(self, root):
-        isbn_node = root.xpath('//div[@class="p_goodstd03"]')
-        if isbn_node:
-            match = re.search("isbn(?:\(13\))?\s?:\s?([^\s]*)",isbn_node[0].text_content(),re.I)
+        isbn_nodes = root.xpath('//div[@class="p_goodstd03"]')
+        for isbn_node in isbn_nodes:
+            match = re.search("isbn(?:\(13\))?\s?:\s?([^\s]*)",isbn_node.text_content(),re.I)
             if match:
                 return match.group(1)
 
