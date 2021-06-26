@@ -41,7 +41,7 @@ class Aladin_co_kr(Source):
     name = 'Aladin.co.kr'
     description = _('Downloads metadata and covers from aladin.co.kr')
     author = 'YongSeok Choi'
-    version = (0, 2, 6)
+    version = (1, 0, 1)
     minimum_calibre_version = (0, 8, 0)
     
     (_, encoding) = locale.getdefaultlocale()
@@ -93,19 +93,20 @@ class Aladin_co_kr(Source):
             title_tokens = list(self.get_title_tokens(title, strip_joiners=False, strip_subtitle=True))
             tokens += title_tokens
             
-            # TODO: No tokent is returned for korean name.
+            # TODO: No token is returned for korean name.
             # 한글이름일 경우 token 이 반환 안된다.
             # by sseeookk ,  20140315 
-            # author_tokens = self.get_author_tokens(authors, only_first_author=True)
-            authors_encode = None
-            if authors: authors_encode = list(a.encode('utf-8') for a in authors)
-            author_tokens = self.get_author_tokens(authors_encode, only_first_author=True)
+            author_tokens = self.get_author_tokens(authors, only_first_author=True)
+            # authors_encode = None
+            # if authors:
+            #     # authors_encode = list(a.encode('utf-8') for a in authors)
+            #     authors_encode = list(quote(a.encode('utf-8') if isinstance(a, unicode) else a) for a in authors)
+            #     # authors_encode = list(a for a in authors)
+            # author_tokens = self.get_author_tokens(authors_encode, only_first_author=True)
             tokens += author_tokens
-            
+
             tokens = [quote(t.encode('utf-8') if isinstance(t, unicode) else t) for t in tokens]
             # tokens = [(t.encode('utf-8') if isinstance(t, unicode) else t) for t in tokens]  # by sseeookk
-            log.debug("len(tokens): %d" % len(tokens))
-            log.debug(tokens)
             q = '+'.join(tokens)
             
             # TODO: why? \ or %
@@ -125,6 +126,33 @@ class Aladin_co_kr(Source):
         # q = q.encode('utf-8')
         return Aladin_co_kr.BASE_URL + '' + q
     
+    # 세글자 이상만을 두글자이상으로 override 함
+    def get_author_tokens(self, authors, only_first_author=True):
+        """
+        Take a list of authors and return a list of tokens useful for an
+        AND search query. This function tries to return tokens in
+        first name middle names last name order, by assuming that if a comma is
+        in the author name, the name is in lastname, other names form.
+        """
+
+        if authors:
+            # Leave ' in there for Irish names
+            remove_pat = re.compile(r'[!@#$%^&*()（）「」{}`~"\s\[\]/]')
+            replace_pat = re.compile(r'[-+.:;,，。；：]')
+            if only_first_author:
+                authors = authors[:1]
+            for au in authors:
+                has_comma = ',' in str(au)
+                au = replace_pat.sub(' ', au)
+                parts = au.split()
+                if has_comma:
+                    # au probably in ln, fn form
+                    parts = parts[1:] + parts[:1]
+                for tok in parts:
+                    tok = remove_pat.sub('', tok).strip()
+                    if len(tok) > 1 and tok.lower() not in ('von', 'van', _('Unknown').lower()):
+                        yield tok
+                        
     def get_cached_cover_url(self, identifiers):
         url = None
         aladin_id = identifiers.get('aladin.co.kr', None)
@@ -247,7 +275,7 @@ class Aladin_co_kr(Source):
             
             title = ''
             if title_nodes:
-                title = re.sub("\s{2,}", " ", title_nodes[0].text_content().strip())
+                title = re.sub(r"\s{2,}", " ", title_nodes[0].text_content().strip())
             if not title:
                 log.info('Could not find title')
                 continue
@@ -286,10 +314,11 @@ class Aladin_co_kr(Source):
         title_tokens = list(self.get_title_tokens(orig_title))
         # by sseeookk, 20140315
         # for korean author name
-        # author_tokens = list(self.get_author_tokens(orig_authors))
-        orig_authors_encode = None
-        if orig_authors: orig_authors_encode = list(a.encode('utf-8') for a in orig_authors)  # by sseeookk
-        author_tokens = list(self.get_author_tokens(orig_authors_encode))
+        author_tokens = list(self.get_author_tokens(orig_authors))
+        # orig_authors_encode = None
+        # if orig_authors:
+        #     orig_authors_encode = list(a.encode('utf-8') for a in orig_authors)  # by sseeookk
+        # author_tokens = list(self.get_author_tokens(orig_authors_encode))
         
         def ismatch(_title, _authors):
             _authors = lower(' '.join(_authors))
@@ -323,10 +352,6 @@ class Aladin_co_kr(Source):
                 log.info('Could not find title')
                 continue
             # Strip off any series information from the title
-            log.info('FOUND TITLE:', title.encode(self.encoding, errors='replace'))
-            log.info('FOUND TITLE:', title.encode('utf-8', errors='replace'))
-            log.info('FOUND TITLE:', title)
-            log.info('self.encoding:', self.encoding)
             if '(' in title:
                 # log.info('Stripping off series(')
                 title = title.rpartition('(')[0].strip()
@@ -404,39 +429,39 @@ if __name__ == '__main__':  # tests
     test_identify_plugin(
         Aladin_co_kr.name,
         [
-            # 원제 꼭지가 붙어 있다.
-            # 장 코르미에 (지은이) | 김미선 (옮긴이) | 실천문학사 | 2005-05-25 | 원제 Che Guevara (2002년)
-            (  # A book with an ISBN
-                {'identifiers': {'isbn': '9788939205109'},
-                 'title': '체 게바라',
-                 'authors': ['장 코르미에']},
-                [title_test('체 게바라 평전', exact=True),
-                 authors_test(['장 코르미에', '김미선']),
-                 series_test('역사 인물 찾기', 10.0)]
-            ),
-            
-            (  # A book with an aladin id
-                {'identifiers': {'aladin.co.kr': '8932008485'}},
-                [title_test('광장', exact=False),
-                 authors_test(['최인훈']),
-                 ]
-            ),
-            
-            (  # A book with title and author
-                {'title': '나의 문화유산답사기 1',
-                 'authors': ['유홍준']},
-                [title_test('나의 문화유산답사기 1', exact=False),
-                 authors_test(['유홍준'])]
-            ),
-            
-            (  # A book with an ISBN
-                {'identifiers': {'isbn': '9788993824698'},
-                 'title': '61시간',
-                 'authors': ['리 차일드']},
-                [title_test('61시간', exact=True),
-                 authors_test(['리 차일드', '박슬라']),
-                 series_test('잭 리처 시리즈', 0.0)]
-            ),
+            # # 원제 꼭지가 붙어 있다.
+            # # 장 코르미에 (지은이) | 김미선 (옮긴이) | 실천문학사 | 2005-05-25 | 원제 Che Guevara (2002년)
+            # (  # A book with an ISBN
+            #     {'identifiers': {'isbn': '9788939205109'},
+            #      'title': '체 게바라',
+            #      'authors': ['장 코르미에']},
+            #     [title_test('체 게바라 평전', exact=True),
+            #      authors_test(['장 코르미에', '김미선']),
+            #      series_test('역사 인물 찾기', 10.0)]
+            # ),
+            #
+            # (  # A book with an aladin id
+            #     {'identifiers': {'aladin.co.kr': '8932008485'}},
+            #     [title_test('광장', exact=False),
+            #      authors_test(['최인훈']),
+            #      ]
+            # ),
+            #
+            # (  # A book with title and author
+            #     {'title': '나의 문화유산답사기 1',
+            #      'authors': ['유홍준']},
+            #     [title_test('나의 문화유산답사기 1', exact=False),
+            #      authors_test(['유홍준'])]
+            # ),
+            #
+            # (  # A book with an ISBN
+            #     {'identifiers': {'isbn': '9788993824698'},
+            #      'title': '61시간',
+            #      'authors': ['리 차일드']},
+            #     [title_test('61시간', exact=True),
+            #      authors_test(['리 차일드', '박슬라']),
+            #      series_test('잭 리처 시리즈', 0.0)]
+            # ),
             
             # TODO: Books that hasn't isbn.
             
@@ -491,16 +516,16 @@ if __name__ == '__main__':  # tests
             # ),
             
             # TODO: Testing code error when rating value is 0.0
-            # (  # A book with an ISBN
-            #     # resutlt : Failed to find rating
-            #     # rating 값이 0인 예.
-            #     {'identifiers': {'isbn': '9788978011136'},
-            #      'title': '금강삼매경론',
-            #      'authors': ['원효']},
-            #     [title_test('금강삼매경론 -상', exact=True),
-            #      authors_test(['원효', '조용길']),
-            #      # series_test('', 0.0)
-            #      ]
-            # ),
+            (  # A book with an ISBN
+                # resutlt : Failed to find rating
+                # rating 값이 0인 예.
+                {'identifiers': {'isbn': '9788978011136'},
+                 'title': '금강삼매경론',
+                 'authors': ['원효']},
+                [title_test('금강삼매경론 -상', exact=True),
+                 authors_test(['원효', '조용길']),
+                 # series_test('', 0.0)
+                 ]
+            ),
         
         ])

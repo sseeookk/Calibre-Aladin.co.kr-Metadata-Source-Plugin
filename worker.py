@@ -693,9 +693,6 @@ class Worker(Thread):  # Get details
                     if len(tags) > 0:
                         # return calibre_tags
                         calibre_tags.extend(tags)
-        self.log.info("calibre_tags --------------------------------")
-        self.log.info(calibre_tags)
-        self.log.info(len(calibre_tags))
         
         return calibre_tags
     

@@ -6,7 +6,7 @@ Calibre-Aladin.co.kr-Metadata-Source-Plugin
 
 설치 방법
 ---------
-1. [release](https://github.com/sseeookk/Calibre-Aladin.co.kr-Metadata-Source-Plugin/releases)에서 최신 버전의 Aladin.co.kr.zip을 다운 받는다.
+1. [releases](https://github.com/sseeookk/Calibre-Aladin.co.kr-Metadata-Source-Plugin/releases)에서 최신 버전의 Aladin.co.kr.zip을 다운 받는다.
 2. 캘리버에서 Preferences 창을 연다.
 3. Advanced 그룹의 Plugins 항목을 선택한다. Plugins 창이 열린다.
 4. Plugins 창에서 Load plugin from file 단추를 눌러 다운받은 Aladin.co.kr.zip을 플러그인을 설치하거나 업데이트 한다.

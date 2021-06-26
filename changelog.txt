@@ -1,7 +1,12 @@
+[B]Version 1.0.1[/B] - 06-26-2021
+[LIST]
+[*]Fix: Can use Korean Names for Author info.
+[/LIST]
+
 [B]Version 1.0.0[/B] - 06-24-2021
 [LIST]
 [*]Update: Changes for Python 3 support in calibre.
-[*]Updated for changes to Aladin.co.kr Site.
+[*]Fix: For changes in Aladin.co.kr Site.
 [/LIST]
 
 [B]Version 0.2.5[/B] - 09-11-2018

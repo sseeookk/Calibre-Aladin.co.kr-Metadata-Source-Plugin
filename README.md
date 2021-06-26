@@ -7,7 +7,7 @@ Korean(한글) - [README.ko.md](README.ko.md)
 
 Install
 -------
-1. Download the latest "Aladin.co.kr.zip" from [release](https://github.com/sseeookk/Calibre-Aladin.co.kr-Metadata-Source-Plugin/releases) .
+1. Download the latest "Aladin.co.kr.zip" from [releases](https://github.com/sseeookk/Calibre-Aladin.co.kr-Metadata-Source-Plugin/releases) .
 2. calibre - Prefrerence -Plugins - Load plugin from file 
 
 Calibre Plugins Forum
